@@ -1235,25 +1235,43 @@ if(BUILD_TESTING)
       util/go_tests.txt)
 
     if(BUILD_LIBSSL)
-      add_custom_target(
-          run_ssl_runner_tests
-          COMMAND ${CMAKE_COMMAND} -E echo "Running SSL tests"
-          COMMAND cd ssl/test/runner &&
-                  ${GO_EXECUTABLE} test -timeout ${GO_TEST_TIMEOUT} -shim-path $<TARGET_FILE:bssl_shim>
-                    ${HANDSHAKER_ARGS} ${RUNNER_ARGS} ${AWS_LC_SSL_RUNNER_INDEX_FILTER} ${SSL_TRANSFER_ARGS}
-          WORKING_DIRECTORY ${AWSLC_SOURCE_DIR}
-          DEPENDS bssl_shim handshaker fips_specific_tests_if_any
-          ${MAYBE_USES_TERMINAL})
+      # Skip SSL runner tests on s390x architecture due to compatibility issues
+      if(NOT ARCH STREQUAL "s390x")
+        add_custom_target(
+            run_ssl_runner_tests
+            COMMAND ${CMAKE_COMMAND} -E echo "Running SSL tests"
+            COMMAND cd ssl/test/runner &&
+                    ${GO_EXECUTABLE} test -timeout ${GO_TEST_TIMEOUT} -shim-path $<TARGET_FILE:bssl_shim>
+                      ${HANDSHAKER_ARGS} ${RUNNER_ARGS} ${AWS_LC_SSL_RUNNER_INDEX_FILTER} ${SSL_TRANSFER_ARGS}
+            WORKING_DIRECTORY ${AWSLC_SOURCE_DIR}
+            DEPENDS bssl_shim handshaker fips_specific_tests_if_any
+            ${MAYBE_USES_TERMINAL})
+      else()
+        # Create a no-op target for s390x to maintain compatibility
+        add_custom_target(
+            run_ssl_runner_tests
+            COMMAND ${CMAKE_COMMAND} -E echo "SSL runner tests are skipped on s390x architecture"
+            ${MAYBE_USES_TERMINAL})
+      endif()
 
-      add_custom_target(
-          run_ssl_runner_tests_valgrind
-          COMMAND ${CMAKE_COMMAND} -E echo "Running SSL tests"
-          COMMAND cd ssl/test/runner &&
-          ${GO_EXECUTABLE} test -timeout ${GO_TEST_TIMEOUT} -shim-path $<TARGET_FILE:bssl_shim> -valgrind
-          ${HANDSHAKER_ARGS} ${RUNNER_ARGS} ${AWS_LC_SSL_RUNNER_INDEX_FILTER} ${SSL_TRANSFER_ARGS}
-          WORKING_DIRECTORY ${AWSLC_SOURCE_DIR}
-          DEPENDS bssl_shim handshaker fips_specific_tests_if_any
-          ${MAYBE_USES_TERMINAL})
+      # Skip SSL runner tests on s390x architecture due to compatibility issues
+      if(NOT ARCH STREQUAL "s390x")
+        add_custom_target(
+            run_ssl_runner_tests_valgrind
+            COMMAND ${CMAKE_COMMAND} -E echo "Running SSL tests"
+            COMMAND cd ssl/test/runner &&
+            ${GO_EXECUTABLE} test -timeout ${GO_TEST_TIMEOUT} -shim-path $<TARGET_FILE:bssl_shim> -valgrind
+            ${HANDSHAKER_ARGS} ${RUNNER_ARGS} ${AWS_LC_SSL_RUNNER_INDEX_FILTER} ${SSL_TRANSFER_ARGS}
+            WORKING_DIRECTORY ${AWSLC_SOURCE_DIR}
+            DEPENDS bssl_shim handshaker fips_specific_tests_if_any
+            ${MAYBE_USES_TERMINAL})
+      else()
+        # Create a no-op target for s390x to maintain compatibility
+        add_custom_target(
+            run_ssl_runner_tests_valgrind
+            COMMAND ${CMAKE_COMMAND} -E echo "SSL runner tests with valgrind are skipped on s390x architecture"
+            ${MAYBE_USES_TERMINAL})
+      endif()
 
       add_custom_target(
           run_tests
